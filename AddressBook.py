@@ -1,5 +1,6 @@
-import json
+import json, re
 from collections import UserDict
+from datetime import datetime, timedelta, date
 
 class AddressBook(UserDict):
     
@@ -14,7 +15,7 @@ class AddressBook(UserDict):
         pass
 
     def serialize(self):
-        with open('data.json', 'a') as file:
+        with open('data.json', 'w') as file:
             json.dump(self.contacts, file)
 
     def deserialize(self):
@@ -47,8 +48,27 @@ class AddressBook(UserDict):
 
     #Выводит список контактов у которых день рождения через n_days от текущей даты
     def nearby_birthday(self, n_days):
-        pass
+        #Узнаем сегодняшнюю дату
+        now = datetime.date(datetime.now())
+        #узнаем дату через заданное количество дней
+        future = now + timedelta(days = int(n_days))
+        fut_list = []
 
+        #Перебираем словари по именам
+        for key, value in self.contacts.items():
+            #Заходим у внутренний словарь чтоб найти дату дня рождения
+            for i, j in value.items():
+                if i == 'Birthday':
+                    #преобразуем строку в дату и если подходит по условию, добавляем имя в список
+                    s = datetime.date(datetime.strptime(j, '%d-%m-%Y'))
+                    if s <= future:
+                        fut_list.append(key)
+                    else:
+                        continue
+                else:
+                    continue
+        return fut_list
+    
     #Редакция контакта. можно разделить на отдельные функции
     def change_contact(self, name, address, phone, email, birthday):
         self.contacts[name] = {
@@ -73,15 +93,27 @@ class AddressBook(UserDict):
     #Удаление контакта
     def delete_contact(self, name):
         self.contacts.pop(name)
-    
-ab = AddressBook()
-ab.add_contact('borys', '83749824')
-ab.add_email('borys', 'ksjdflks@mail.com')
-ab.add_contact('serg', '8374982445')
-ab.add_email('serg', 'ksjdflksssr@mail.com')
-ab.add_contact('art', '8374982423')
-ab.add_email('art', 'kmnmsjdflks@mail.com')
-ab.add_contact('nok', '8374982489')
-ab.add_email('nok', 'ksjeckdflks@mail.com')
 
+    #Правильность ввода номера телефона
+    def validate_phone(self, phone: str):
+        san_phone = re.sub(r'[-)( ]', '', phone)
+        print(san_phone)
+        if re.match('^\\+380\d{9}$', san_phone):
+            return True
+        else:
+            return False
+
+    #Правильность ввода электронной почты
+    def validate_email(self, email: str):
+        if re.match('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$', email):
+            return True
+        else:
+            return False
+
+    #правильность ввода даты
+    def validate_birthday(self, date: str):
+        if re.match('^\d{2}-\d{2}-\d{4}$', date):
+            return True
+        else:
+            return False
 
