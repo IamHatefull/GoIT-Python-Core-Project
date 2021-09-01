@@ -1,16 +1,14 @@
-import json
+import json, re
 from collections import UserDict
 from datetime import datetime, timedelta, date
-import re
-
 
 class AddressBook(UserDict):
-
+    
     '''Все контакты будут иметь вид:
     'имя контакта1' : { 'address' : 'адрес контакта', 'phone' : 'номер(пока что один и типа str)',
     'email' : 'електронная почта', 'birthday' : 'день рождения'},
     'имя контакта2' :{следующие данные},'''
-
+    
     contacts = {}
 
     def __repr__(self):
@@ -24,44 +22,45 @@ class AddressBook(UserDict):
         with open('data.json', 'r') as file:
             self.contacts = json.load(file)
 
-    # Добавление контакта. Не добавив контакт через эту функ добавить другую информацию не вийдет
+    #Добавление контакта. Не добавив контакт через эту функ добавить другую информацию не вийдет
     def add_contact(self, name, phone_number):
         self.contacts[name] = {
-            'Address': None,
-            'Phone': phone_number,
-            'Email': None,
-            'Birthday': None
-        }
+            'Address' : None,
+            'Phone' : phone_number,
+            'Email' : None,
+            'Birthday' : None
+            }
 
-    # Добавление адреса контакта
-    # Добавить валидацию ввода   <-- Task!
+    #Добавление адреса контакта
+    #Добавить валидацию ввода   <-- Task!
     def add_address(self, name, address):
         self.contacts[name]['Address'] = address
 
-    # Добавление електронной почты
+    #Добавление електронной почты
+    #Добавить валидацию ввода     <--Task
     def add_email(self, name, email):
         self.contacts[name]['Email'] = email
 
-    # Добавление дня рождения. Только стринг. При будущих манипуляциях с датой переводим стринг в тип date
-    # Нужно будет добавить валидацию ввода для дня рождения   <--Task
+    #Добавление дня рождения. Только стринг. При будущих манипуляциях с датой переводим стринг в тип date
+    #Нужно будет добавить валидацию ввода для дня рождения   <--Task
     def add_birthday(self, name, birthday):
         self.contacts[name]['Birthday'] = birthday
 
-    # Выводит список контактов у которых день рождения через n_days от текущей даты
+    #Выводит список контактов у которых день рождения через n_days от текущей даты
     def nearby_birthday(self, n_days):
-        # Узнаем сегодняшнюю дату
+        #Узнаем сегодняшнюю дату
         now = datetime.date(datetime.now())
-        # узнаем дату через заданное количество дней
-        future = now + timedelta(days=n_days)
+        #узнаем дату через заданное количество дней
+        future = now + timedelta(days = int(n_days))
         fut_list = []
 
-        # Перебираем словари по именам
+        #Перебираем словари по именам
         for key, value in self.contacts.items():
-            # Заходим у внутренний словарь чтоб найти дату дня рождения
+            #Заходим у внутренний словарь чтоб найти дату дня рождения
             for i, j in value.items():
                 if i == 'Birthday':
-                    # преобразуем строку в дату и если подходит по условию, добавляем имя в список
-                    s = datetime.strptime(j, '%d %B %Y')
+                    #преобразуем строку в дату и если подходит по условию, добавляем имя в список
+                    s = datetime.date(datetime.strptime(j, '%d-%m-%Y'))
                     if s <= future:
                         fut_list.append(key)
                     else:
@@ -69,37 +68,17 @@ class AddressBook(UserDict):
                 else:
                     continue
         return fut_list
-
-    # Редакция контакта. можно разделить на отдельные функции
+    
+    #Редакция контакта. можно разделить на отдельные функции
     def change_contact(self, name, address, phone, email, birthday):
         self.contacts[name] = {
-            'Address': address,
-            'Phone': phone,
-            'Email': email,
-            'Birthday': birthday
-        }
+            'Address' : address,
+            'Phone' : phone,
+            'Email' : email,
+            'Birthday' : birthday
+            }
 
-    def validate_phone(self, phone: str):
-        san_phone = re.sub(r'[-)( ]', '', phone)
-        print(san_phone)
-        if re.match('^\\+380\d{9}$', san_phone):
-            return True
-        else:
-            return False
-
-    def validate_email(self, email: str):
-        if re.match('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$', email):
-            return True
-        else:
-            return False
-
-    def validate_birthday(self, date: str):
-        if re.match('^\d{2}.\d{2}.\d{4}$', date):
-            return True
-        else:
-            return False
-
-    # Поиск по контактам. пока не знаю. будем только по имени или по всем параметрам????
+    #Поиск по контактам. пока не знаю. будем только по имени или по всем параметрам????
     def search(self, string):
         for key, value in self.contacts.items():
             if key == string:
@@ -111,19 +90,29 @@ class AddressBook(UserDict):
                     else:
                         continue
 
-    # Удаление контакта
+    #Удаление контакта
     def delete_contact(self, name):
         self.contacts.pop(name)
 
+    #Правильность ввода номера телефона
+    def validate_phone(self, phone: str):
+        san_phone = re.sub(r'[-)( ]', '', phone)
+        print(san_phone)
+        if re.match('^\\+380\d{9}$', san_phone):
+            return True
+        else:
+            return False
 
-'''    
-ab = AddressBook()
-ab.add_contact('borys', '83749824')
-ab.add_email('borys', 'ksjdflks@mail.com')
-ab.add_contact('serg', '8374982445')
-ab.add_email('serg', 'ksjdflksssr@mail.com')
-ab.add_contact('art', '8374982423')
-ab.add_email('art', 'kmnmsjdflks@mail.com')
-ab.add_contact('nok', '8374982489')
-ab.add_email('nok', 'ksjeckdflks@mail.com')
-'''
+    #Правильность ввода электронной почты
+    def validate_email(self, email: str):
+        if re.match('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$', email):
+            return True
+        else:
+            return False
+
+    #правильность ввода даты
+    def validate_birthday(self, date: str):
+        if re.match('^\d{2}-\d{2}-\d{4}$', date):
+            return True
+        else:
+            return False
